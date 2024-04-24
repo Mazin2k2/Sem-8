@@ -1,0 +1,136 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+#include <omp.h>
+
+void displayArray(const std::vector<int>& arr) {
+    for (int num : arr) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;
+}
+
+void bubbleSort(std::vector<int>& arr) {
+    int n = arr.size();
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = 0; j < n - i - 1; ++j) {
+            if (arr[j] > arr[j + 1]) {
+                std::swap(arr[j], arr[j + 1]);
+            }
+        }
+    }
+}
+
+void merge(std::vector<int>& arr, int l, int m, int r) {
+    int n1 = m - l + 1;
+    int n2 = r - m;
+    
+    std::vector<int> L(n1), R(n2);
+    
+    for (int i = 0; i < n1; ++i) {
+        L[i] = arr[l + i];
+    }
+    for (int j = 0; j < n2; ++j) {
+        R[j] = arr[m + 1 + j];
+    }
+    
+    int i = 0, j = 0, k = l;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            arr[k] = L[i];
+            ++i;
+        } else {
+            arr[k] = R[j];
+            ++j;
+        }
+        ++k;
+    }
+    
+    while (i < n1) {
+        arr[k] = L[i];
+        ++i;
+        ++k;
+    }
+    
+    while (j < n2) {
+        arr[k] = R[j];
+        ++j;
+        ++k;
+    }
+}
+
+void mergeSort(std::vector<int>& arr, int l, int r) {
+    if (l < r) {
+        int m = l + (r - l) / 2;
+        
+        mergeSort(arr, l, m);
+        mergeSort(arr, m + 1, r);
+        
+        merge(arr, l, m, r);
+    }
+}
+
+int main() {
+    int n;
+    std::cout << "Enter the number of elements: ";
+    std::cin >> n;
+    
+    int range;
+    std::cout << "Enter the range for random values (e.g., 100 for values between 0 and 99): ";
+    std::cin >> range;
+    
+    std::vector<int> arr(n);
+    srand(time(0));
+    for (int i = 0; i < n; ++i) {
+        arr[i] = rand() % range;
+    }
+    
+    std::cout << "Unsorted array: ";
+    displayArray(arr);
+    
+    std::vector<int> arrBubble = arr;
+    std::vector<int> arrMerge = arr;
+    
+    double start, end;
+    
+    // Sequential Bubble Sort
+    start = omp_get_wtime();
+    bubbleSort(arrBubble);
+    end = omp_get_wtime();
+    std::cout << "Sorted array (Sequential Bubble Sort): ";
+    displayArray(arrBubble);
+    std::cout << "Time taken (Sequential Bubble Sort): " << end - start << " seconds" << std::endl;
+    
+    // Parallel Bubble Sort
+    start = omp_get_wtime();
+    #pragma omp parallel
+    {
+        bubbleSort(arr);
+    }
+    end = omp_get_wtime();
+    std::cout << "Sorted array (Parallel Bubble Sort): ";
+    displayArray(arr);
+    std::cout << "Time taken (Parallel Bubble Sort): " << end - start << " seconds" << std::endl;
+    
+    // Sequential Merge Sort
+    start = omp_get_wtime();
+    mergeSort(arrMerge, 0, n - 1);
+    end = omp_get_wtime();
+    std::cout << "Sorted array (Sequential Merge Sort): ";
+    displayArray(arrMerge);
+    std::cout << "Time taken (Sequential Merge Sort): " << end - start << " seconds" << std::endl;
+    
+    // Parallel Merge Sort
+    start = omp_get_wtime();
+    #pragma omp parallel
+    {
+        mergeSort(arr, 0, n - 1);
+    }
+    end = omp_get_wtime();
+    std::cout << "Sorted array (Parallel Merge Sort): ";
+    displayArray(arr);
+    std::cout << "Time taken (Parallel Merge Sort): " << end - start << " seconds" << std::endl;
+    
+    return 0;
+}
