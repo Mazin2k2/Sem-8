@@ -1,0 +1,88 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>  // For rand()
+#include <ctime>    // For clock()
+#include <chrono>   // For high_resolution_clock
+#include <omp.h>    // OpenMP
+
+// Sequential Bubble Sort
+void bubbleSortSequential(int* arr, int size) {
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Parallel Bubble Sort using OpenMP
+void bubbleSortParallel(int* arr, int size) {
+    #pragma omp parallel for
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Function to print an array
+void printArray(int* arr, int size) {
+    for (int i = 0; i < size; i++) {
+        std::cout << arr[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
+int main() {
+    int size;
+    std::cout << "Enter the size of the array: ";
+    std::cin >> size;
+
+    int* arr = new int[size];
+
+    std::cout << "Enter " << size << " elements for the array:" << std::endl;
+    for (int i = 0; i < size; ++i) {
+        std::cin >> arr[i];
+    }
+
+    std::cout << "Original array:" << std::endl;
+    printArray(arr, size);
+
+    // Measure sequential bubble sort time
+    auto startSeqBubble = std::chrono::high_resolution_clock::now();
+    bubbleSortSequential(arr, size);
+    auto endSeqBubble = std::chrono::high_resolution_clock::now();
+    double timeSeqBubble = std::chrono::duration_cast<std::chrono::microseconds>(endSeqBubble - startSeqBubble).count() / 1e6;
+
+    // Print sorted array
+    std::cout << "Sorted array using sequential bubble sort:" << std::endl;
+    printArray(arr, size);
+    std::cout << "Sequential Bubble Sort Time: " << timeSeqBubble << " seconds" << std::endl;
+
+    // Reset array for parallel bubble sort
+    std::cout << "Enter " << size << " elements for the array:" << std::endl;
+    for (int i = 0; i < size; ++i) {
+        std::cin >> arr[i];
+    }
+
+    // Measure parallel bubble sort time
+    auto startParBubble = std::chrono::high_resolution_clock::now();
+    bubbleSortParallel(arr, size);
+    auto endParBubble = std::chrono::high_resolution_clock::now();
+    double timeParBubble = std::chrono::duration_cast<std::chrono::microseconds>(endParBubble - startParBubble).count() / 1e6;
+
+    // Print sorted array
+    std::cout << "Sorted array using parallel bubble sort:" << std::endl;
+    printArray(arr, size);
+    std::cout << "Parallel Bubble Sort Time: " << timeParBubble << " seconds" << std::endl;
+
+    delete[] arr;
+    return 0;
+}
